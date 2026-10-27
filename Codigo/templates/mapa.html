@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Mapa Interactivo de Corralones — GPMV CDMX{% endblock %}
+{% block content %}
+<div class="map-page-container">
+
+    <div class="map-header">
+        <div class="map-header-text">
+            <h2>🗺️ Mapa Interactivo de Depósitos Vehiculares (Corralones)</h2>
+            <p class="map-header-sub">
+                Localiza geográficamente el corralón asignado a tu vehículo en la Ciudad de México, 
+                consulta rutas de acceso, horarios 24 horas y requisitos legales para la entrega.
+            </p>
+        </div>
+        <div class="map-quick-actions">
+            <button type="button" id="btnLocateUser" class="btn btn-secondary btn-sm">
+                📍 Mi ubicación (Simulada CDMX)
+            </button>
+            <button type="button" id="btnResetMapView" class="btn btn-primary btn-sm">
+                🔄 Restablecer vista CDMX
+            </button>
+        </div>
+    </div>
+
+    <!-- Barra de Búsqueda y Filtros de Zona -->
+    <div class="map-filters-bar">
+        <div class="map-search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" 
+                   id="corralonSearchInput" 
+                   placeholder="Buscar por nombre, alcaldía o dirección...">
+        </div>
+
+        <div class="zone-pills" role="radiogroup">
+            <button type="button" class="zone-pill active" data-zone="all">Todos (5)</button>
+            <button type="button" class="zone-pill" data-zone="Centro">Centro</button>
+            <button type="button" class="zone-pill" data-zone="Norte">Norte</button>
+            <button type="button" class="zone-pill" data-zone="Oriente">Oriente</button>
+            <button type="button" class="zone-pill" data-zone="Poniente">Poniente</button>
+            <button type="button" class="zone-pill" data-zone="Sur">Sur</button>
+        </div>
+    </div>
+
+    <!-- Layout Dividido: Mapa Interactivo y Lista de Corralones -->
+    <div class="map-layout">
+        <!-- Contenedor del Mapa Leaflet -->
+        <div class="map-canvas-container">
+            <div id="corralonMap" class="corralon-map"></div>
+            <div class="map-legend">
+                <span class="legend-item"><span class="legend-dot dot-corralon"></span> Corralón Oficial</span>
+                <span class="legend-item"><span class="legend-dot dot-user"></span> Tu Ubicación</span>
+            </div>
+        </div>
+
+        <!-- Panel Lateral con Listado de Corralones -->
+        <div class="corralones-sidebar">
+            <h3 class="sidebar-heading">Depósitos Oficiales Activos (<span id="corralonCount">{{ corralones|length }}</span>)</h3>
+            
+            <div class="corralon-cards-list" id="corralonList">
+                {% for c in corralones %}
+                <div class="corralon-item-card" 
+                     data-name="{{ c.nombre }}" 
+                     data-zone="{{ c.zona }}" 
+                     data-lat="{{ c.lat }}" 
+                     data-lng="{{ c.lng }}"
+                     role="button"
+                     tabindex="0">
+                    <div class="corralon-card-header">
+                        <span class="corralon-badge-zone badge-{{ c.zona|lower }}">{{ c.zona }}</span>
+                        <span class="corralon-status-live">🟢 Abierto 24h</span>
+                    </div>
+                    <h4 class="corralon-card-title">🏛️ {{ c.nombre }}</h4>
+                    <p class="corralon-card-address">📍 {{ c.direccion }}</p>
+                    <p class="corralon-card-ref">🚩 Ref: {{ c.referencia }}</p>
+                    <div class="corralon-card-meta">
+                        <span>📞 {{ c.telefono }}</span>
+                        <span>📦 Capacidad: {{ c.capacidad }}</span>
+                    </div>
+                    <div class="corralon-card-actions">
+                        <button type="button" class="btn btn-sm btn-primary btn-focus-marker">
+                            Ver en mapa
+                        </button>
+                        <a href="https://www.google.com/maps/search/?api=1&query={{ c.lat }},{{ c.lng }}" 
+                           target="_blank" 
+                           rel="noopener"
+                           class="btn btn-sm btn-secondary btn-route-link">
+                            🗺️ Cómo llegar
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Requisitos de Retiro -->
+            <div class="release-requirements-card">
+                <h4>📋 Documentos Requeridos para Retiro:</h4>
+                <ul>
+                    <li>✅ Identificación Oficial Vigente (INE, Cédula o Pasaporte).</li>
+                    <li>✅ Comprobante de Pago Digital Oficial emitido por el sistema GPMV.</li>
+                    <li>✅ Tarjeta de Circulación original vigente.</li>
+                    <li>✅ Llaves originales del vehículo automotor.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

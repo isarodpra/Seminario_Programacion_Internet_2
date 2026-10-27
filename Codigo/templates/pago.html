@@ -1,0 +1,571 @@
+{% extends "base.html" %}
+{% block title %}Pago Simulado de Multa — GPMV CDMX{% endblock %}
+
+{% block content %}
+<div class="pago-container" style="max-width: 780px; margin: 0 auto 3rem auto;">
+
+    <!-- Indicador de Pasos del Proceso -->
+    <div class="payment-steps">
+        <div class="step-item completed">
+            <div class="step-num">✓</div>
+            <span class="step-label">1. Infracción Verificada</span>
+        </div>
+        <div class="step-item active">
+            <div class="step-num">2</div>
+            <span class="step-label">2. Pasarela Simulada</span>
+        </div>
+        <div class="step-item">
+            <div class="step-num">3</div>
+            <span class="step-label">3. Comprobante Oficial</span>
+        </div>
+    </div>
+
+    <!-- Encabezado con Ribbon de Simulación -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+        <div>
+            <h2 style="margin: 0; color: var(--c-azul-oscuro);">💳 Pasarela de Liquidación en Línea</h2>
+            <p style="color: var(--c-gris-mutado); font-size: 0.9rem; margin-top: 0.25rem;">
+                Secretaría de Administración y Finanzas &bull; Tesorería de la CDMX
+            </p>
+        </div>
+        <div class="simulacion-ribbon">
+            <span>🛡️ Entorno Simulado de Pagos</span>
+        </div>
+    </div>
+
+    <!-- Card 1: Resumen del Adeudo e Infracción -->
+    <div class="card" style="margin-bottom: 1.5rem; border-left: 5px solid var(--c-guinda);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 1.25rem;">📑</span>
+                <strong style="font-size: 1.1rem; color: var(--c-azul-oscuro);">Folio: {{ detalle.folio }}</strong>
+            </div>
+            <span class="badge badge-pendiente">Pendiente de Liquidación</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem; font-size: 0.92rem;">
+            <div>
+                <p style="color: var(--c-gris-mutado); margin-bottom: 0.2rem;">Vehículo:</p>
+                <p>
+                    <span class="placa-badge">{{ detalle.placa }}</span>
+                    <strong style="margin-left: 0.4rem;">{{ detalle.marca }} {{ detalle.modelo }} ({{ detalle.anio }})</strong>
+                </p>
+            </div>
+            <div>
+                <p style="color: var(--c-gris-mutado); margin-bottom: 0.2rem;">Motivo de la Sanción:</p>
+                <p><strong>{{ detalle.motivo }}</strong></p>
+            </div>
+            {% if detalle.corralon %}
+            <div>
+                <p style="color: var(--c-gris-mutado); margin-bottom: 0.2rem;">Ubicación en Corralón:</p>
+                <p style="color: var(--c-rojo); font-weight: 600;">🚨 {{ detalle.corralon }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="background: #f8fafc; border-radius: var(--radius-sm); padding: 0.85rem 1rem; border: 1px dashed var(--c-gris-borde);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; font-size: 0.92rem;">
+                <span>Importe sanción original:</span>
+                <span>${{ '%.2f'|format(detalle.monto) }} MXN</span>
+            </div>
+
+            {% if descuento > 0 %}
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; font-size: 0.92rem; color: var(--c-verde); font-weight: 600;">
+                <span>🎉 Bonificación pronto pago ({{ descuento }}%):</span>
+                <span>-${{ '%.2f'|format((detalle.monto|float) - monto_final) }} MXN</span>
+            </div>
+            {% endif %}
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; font-size: 0.92rem; color: var(--c-gris-mutado);">
+                <span>Comisión por procesamiento digital:</span>
+                <span style="color: var(--c-verde); font-weight: 600;">$0.00 (Exento CDMX)</span>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--c-gris-borde); margin: 0.5rem 0;">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 1.05rem; font-weight: 700;">Total a liquidar:</span>
+                <span style="font-size: 1.45rem; font-weight: 800; color: var(--c-guinda);">
+                    ${{ '%.2f'|format(monto_final) }} <span style="font-size: 0.9rem; font-weight: 600;">MXN</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 2: Selección de Método y Pasarela Simulada -->
+    <div class="card">
+        <h3 style="margin-bottom: 0.5rem; color: var(--c-azul-oscuro); display: flex; align-items: center; gap: 0.5rem;">
+            <span>🛡️</span> Selecciona tu Método de Pago Seguro
+        </h3>
+        <p style="color: var(--c-gris-mutado); font-size: 0.88rem; margin-bottom: 1.25rem;">
+            Elige la modalidad para simular la acreditación instantánea ante la Tesorería de la CDMX.
+        </p>
+
+        <!-- Formulario Principal -->
+        <form id="formPagoSimulado" method="POST" action="{{ url_for('pagar', id_infraccion=detalle.id_infraccion) }}">
+            <input type="hidden" name="monto" value="{{ monto_final }}">
+            <!-- Input oculto que mantiene el método real para enviar -->
+            <input type="hidden" id="metodo_pago_real" name="metodo_pago" value="Tarjeta">
+
+            <!-- Selector visual de métodos -->
+            <div class="metodos-grid">
+                <div class="metodo-card active" data-tab="tarjeta" data-metodo="Tarjeta">
+                    <input type="radio" name="metodo_selector" value="Tarjeta" checked>
+                    <span class="metodo-icon">💳</span>
+                    <span class="metodo-name">Tarjeta</span>
+                    <span class="metodo-sub">Débito / Crédito</span>
+                </div>
+
+                <div class="metodo-card" data-tab="spei" data-metodo="Transferencia">
+                    <input type="radio" name="metodo_selector" value="Transferencia">
+                    <span class="metodo-icon">🏦</span>
+                    <span class="metodo-name">SPEI 24/7</span>
+                    <span class="metodo-sub">Interbancaria</span>
+                </div>
+
+                <div class="metodo-card" data-tab="oxxo" data-metodo="Deposito">
+                    <input type="radio" name="metodo_selector" value="Deposito">
+                    <span class="metodo-icon">🏪</span>
+                    <span class="metodo-name">OXXO Pay</span>
+                    <span class="metodo-sub">Tienda conveniencia</span>
+                </div>
+
+                <div class="metodo-card" data-tab="codi" data-metodo="Transferencia">
+                    <input type="radio" name="metodo_selector" value="CoDi">
+                    <span class="metodo-icon">📱</span>
+                    <span class="metodo-name">CoDi / QR</span>
+                    <span class="metodo-sub">Banxico móvil</span>
+                </div>
+            </div>
+
+            <!-- PANEL 1: TARJETA BANCARIA -->
+            <div id="tab-tarjeta" class="tab-content-panel active">
+                <!-- Mockup de Tarjeta Interactiva -->
+                <div class="credit-card-wrap">
+                    <div class="credit-card-mockup" id="cardMockupVisual">
+                        <div class="card-top">
+                            <div class="card-chip"></div>
+                            <span class="card-contactless">📶</span>
+                            <span class="card-bank-name" id="cardBankLabel">BANCO CDMX</span>
+                        </div>
+                        <div class="card-number-display" id="cardNumDisplay">4532 •••• •••• 8899</div>
+                        <div class="card-bottom">
+                            <div>
+                                <small style="display: block; font-size: 0.65rem; opacity: 0.75; text-transform: uppercase;">Titular</small>
+                                <span class="card-holder-display" id="cardHolderDisplay">JUAN PÉREZ GONZÁLEZ</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <small style="display: block; font-size: 0.65rem; opacity: 0.75; text-transform: uppercase;">Vence</small>
+                                <span class="card-expiry-display" id="cardExpiryDisplay">12/28</span>
+                            </div>
+                            <span class="card-brand-logo" id="cardBrandLogo">VISA</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 0.75rem;">
+                    <button type="button" id="btnFillDemoCard" class="copy-btn" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">
+                        ✨ Llenar datos de prueba simulados
+                    </button>
+                </div>
+
+                <!-- Campos de formulario de tarjeta -->
+                <div style="margin-bottom: 0.75rem;">
+                    <label for="inputCardNum" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">
+                        Número de Tarjeta (16 dígitos):
+                    </label>
+                    <input type="text" id="inputCardNum" maxlength="19" placeholder="4532 8890 1234 8899"
+                           value="4532 8890 1234 8899" style="font-family: monospace; letter-spacing: 1px;">
+                </div>
+
+                <div class="card-fields-grid">
+                    <div>
+                        <label for="inputCardHolder" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">
+                            Nombre del Titular:
+                        </label>
+                        <input type="text" id="inputCardHolder" placeholder="JUAN PEREZ GONZALEZ" value="JUAN PEREZ GONZALEZ">
+                    </div>
+                    <div>
+                        <label for="inputCardExp" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">
+                            Expira (MM/AA):
+                        </label>
+                        <input type="text" id="inputCardExp" maxlength="5" placeholder="12/28" value="12/28">
+                    </div>
+                    <div>
+                        <label for="inputCardCvv" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">
+                            CVV / CVC:
+                        </label>
+                        <input type="password" id="inputCardCvv" maxlength="4" placeholder="789" value="789">
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL 2: SPEI / TRANSFERENCIA INTERBANCARIA -->
+            <div id="tab-spei" class="tab-content-panel">
+                <div class="spei-box">
+                    <p style="font-size: 0.88rem; color: var(--c-gris-texto); margin-bottom: 0.75rem;">
+                        Realiza una transferencia SPEI desde la app de tu banco con los siguientes datos oficiales:
+                    </p>
+                    
+                    <div class="info-copy-row">
+                        <span>Banco Destinatario:</span>
+                        <strong>STP (Sistema de Transferencias y Pagos)</strong>
+                    </div>
+                    <div class="info-copy-row">
+                        <span>Beneficiario Oficial:</span>
+                        <strong>Tesorería del Gobierno de la CDMX</strong>
+                    </div>
+                    <div class="info-copy-row">
+                        <span>CLABE Interbancaria:</span>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <strong style="font-family: monospace; font-size: 1rem; color: var(--c-azul-oscuro);">646180123456789012</strong>
+                            <button type="button" class="copy-btn copy-clabe-btn" data-text="646180123456789012">📋 Copiar</button>
+                        </div>
+                    </div>
+                    <div class="info-copy-row">
+                        <span>Concepto / Referencia:</span>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <strong style="font-family: monospace; color: var(--c-guinda);">{{ detalle.folio }}</strong>
+                            <button type="button" class="copy-btn copy-folio-btn" data-text="{{ detalle.folio }}">📋 Copiar</button>
+                        </div>
+                    </div>
+                    <div class="info-copy-row">
+                        <span>Monto Exacto:</span>
+                        <strong style="color: var(--c-verde); font-size: 1.05rem;">${{ '%.2f'|format(monto_final) }} MXN</strong>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin: 1rem 0;">
+                    <button type="button" id="btnSimularSPEI" class="btn btn-secondary" style="font-weight: 600;">
+                        ⚡ Simular confirmación inmediata de depósito SPEI
+                    </button>
+                </div>
+            </div>
+
+            <!-- PANEL 3: OXXO PAY / TIENDAS DE CONVENIENCIA -->
+            <div id="tab-oxxo" class="tab-content-panel">
+                <div class="oxxo-box">
+                    <p style="font-size: 0.88rem; margin-bottom: 0.75rem; color: var(--c-gris-texto);">
+                        Presenta esta ficha digital o código en cualquier tienda OXXO, 7-Eleven o Farmacias del Ahorro:
+                    </p>
+
+                    <div class="barcode-visual">
+                        <div style="font-size: 0.75rem; color: var(--c-gris-mutado); margin-bottom: 0.25rem;">OXXO Pay &bull; Tesorería CDMX</div>
+                        <div class="barcode-lines"></div>
+                        <div class="barcode-digits">9801 4452 1092 88</div>
+                        <small style="color: var(--c-gris-mutado); font-size: 0.72rem;">Referencia de 14 dígitos</small>
+                    </div>
+
+                    <div class="info-copy-row">
+                        <span>Número de Referencia:</span>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <strong style="font-family: monospace;">98014452109288</strong>
+                            <button type="button" class="copy-btn" data-text="98014452109288">📋 Copiar</button>
+                        </div>
+                    </div>
+                    <div class="info-copy-row">
+                        <span>Vigencia para pago:</span>
+                        <strong style="color: var(--c-verde);">48 Horas (Inmediato)</strong>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin: 1rem 0;">
+                    <button type="button" id="btnSimularOXXO" class="btn btn-secondary" style="font-weight: 600;">
+                        🛒 Simular escaneo de código en caja de tienda
+                    </button>
+                </div>
+            </div>
+
+            <!-- PANEL 4: CODI / QR BANXICO -->
+            <div id="tab-codi" class="tab-content-panel">
+                <div class="codi-box">
+                    <p style="font-size: 0.88rem; text-align: center; margin-bottom: 0.5rem;">
+                        Escanea el código QR oficial desde tu aplicación bancaria móvil (CoDi Banxico):
+                    </p>
+
+                    <div class="qr-visual-box">
+                        <div class="qr-scan-line"></div>
+                        <!-- SVG Código QR Oficial CDMX -->
+                        <svg viewBox="0 0 100 100" width="180" height="180" style="display: block; margin: 0 auto;">
+                            <!-- Fondo Blanco -->
+                            <rect width="100" height="100" fill="white" />
+                            <!-- Marcadores de posición en esquinas -->
+                            <rect x="5" y="5" width="25" height="25" fill="#1e293b" />
+                            <rect x="8" y="8" width="19" height="19" fill="white" />
+                            <rect x="11" y="11" width="13" height="13" fill="#7b1e3a" />
+
+                            <rect x="70" y="5" width="25" height="25" fill="#1e293b" />
+                            <rect x="73" y="8" width="19" height="19" fill="white" />
+                            <rect x="76" y="11" width="13" height="13" fill="#7b1e3a" />
+
+                            <rect x="5" y="70" width="25" height="25" fill="#1e293b" />
+                            <rect x="8" y="73" width="19" height="19" fill="white" />
+                            <rect x="11" y="76" width="13" height="13" fill="#7b1e3a" />
+
+                            <!-- Patrones de bits simulados -->
+                            <rect x="35" y="10" width="8" height="8" fill="#1a3d7c" />
+                            <rect x="50" y="10" width="12" height="6" fill="#1e293b" />
+                            <rect x="35" y="24" width="25" height="5" fill="#1a3d7c" />
+
+                            <rect x="10" y="38" width="8" height="8" fill="#1e293b" />
+                            <rect x="24" y="42" width="14" height="14" fill="#7b1e3a" />
+                            <rect x="42" y="35" width="16" height="16" fill="#1a3d7c" />
+                            <rect x="64" y="38" width="10" height="12" fill="#1e293b" />
+                            <rect x="80" y="42" width="12" height="10" fill="#1a3d7c" />
+
+                            <rect x="35" y="58" width="12" height="12" fill="#1e293b" />
+                            <rect x="52" y="55" width="14" height="14" fill="#7b1e3a" />
+                            <rect x="72" y="58" width="18" height="8" fill="#1a3d7c" />
+
+                            <rect x="38" y="75" width="10" height="15" fill="#1a3d7c" />
+                            <rect x="54" y="78" width="20" height="10" fill="#1e293b" />
+                            <rect x="80" y="75" width="12" height="15" fill="#7b1e3a" />
+
+                            <!-- Logo Central CDMX -->
+                            <circle cx="50" cy="50" r="10" fill="white" stroke="#7b1e3a" stroke-width="2" />
+                            <text x="50" y="54" font-size="8" font-weight="bold" fill="#7b1e3a" text-anchor="middle">CDMX</text>
+                        </svg>
+
+                        <div style="margin-top: 0.5rem; font-size: 0.8rem; font-weight: 600; color: var(--c-azul-oscuro);">
+                            CoDi Banxico &bull; Multa {{ detalle.folio }}
+                        </div>
+                        <small style="color: var(--c-gris-mutado);">Vigencia del QR: <span id="codiTimer">14:59 min</span></small>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin: 1rem 0;">
+                    <button type="button" id="btnSimularCoDi" class="btn btn-secondary" style="font-weight: 600;">
+                        📲 Simular lectura y pago desde app bancaria CoDi
+                    </button>
+                </div>
+            </div>
+
+            <!-- Botones de Acción Final -->
+            <div class="acciones" style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button type="button" id="btnIniciarPagoSimulado" class="btn btn-primary btn-lg" style="flex: 2; padding: 0.85rem 1.5rem; font-size: 1.05rem;">
+                    🔒 Confirmar y Simular Pago Seguro (${{ '%.2f'|format(monto_final) }} MXN)
+                </button>
+                <a class="btn btn-secondary" href="{{ url_for('detalle', id_infraccion=detalle.id_infraccion) }}" style="flex: 1; text-align: center; align-self: center;">
+                    Cancelar y Regresar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL OVERLAY DE PROCESAMIENTO SIMULADO -->
+<div id="simulacion-overlay">
+    <div class="simulacion-modal">
+        <div class="sim-loader-circle"></div>
+        <h3 id="simModalTitle" style="color: var(--c-azul-oscuro); margin-bottom: 0.5rem; font-size: 1.25rem;">
+            Procesando Transacción Segura
+        </h3>
+        <p id="simModalStep" style="color: var(--c-gris-mutado); font-size: 0.9rem; min-height: 40px;">
+            Conectando con la pasarela bancaria y verificando el folio {{ detalle.folio }}...
+        </p>
+
+        <div class="sim-progress-track">
+            <div class="sim-progress-bar" id="simProgressBar"></div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--c-gris-mutado); margin-top: 0.25rem;">
+            <span>Cifrado SSL 256-bit</span>
+            <span id="simProgressPct">0%</span>
+            <span>Tesorería CDMX</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const metodoRealInput = document.getElementById('metodo_pago_real');
+    const metodoCards = document.querySelectorAll('.metodo-card');
+    const tabPanels = document.querySelectorAll('.tab-content-panel');
+    const formPago = document.getElementById('formPagoSimulado');
+    const btnIniciarPago = document.getElementById('btnIniciarPagoSimulado');
+
+    // Cambiar pestañas de métodos de pago
+    metodoCards.forEach(card => {
+        card.addEventListener('click', function () {
+            if (window.gpmvAudio) window.gpmvAudio.playClick();
+
+            metodoCards.forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) radio.checked = true;
+
+            const tabName = this.getAttribute('data-tab');
+            const metodoVal = this.getAttribute('data-metodo');
+
+            metodoRealInput.value = metodoVal;
+
+            tabPanels.forEach(p => p.classList.remove('active'));
+            const targetPanel = document.getElementById('tab-' + tabName);
+            if (targetPanel) targetPanel.classList.add('active');
+        });
+    });
+
+    // Inputs de la tarjeta con actualización visual reactiva
+    const inputNum = document.getElementById('inputCardNum');
+    const inputHolder = document.getElementById('inputCardHolder');
+    const inputExp = document.getElementById('inputCardExp');
+    const cardNumDisplay = document.getElementById('cardNumDisplay');
+    const cardHolderDisplay = document.getElementById('cardHolderDisplay');
+    const cardExpiryDisplay = document.getElementById('cardExpiryDisplay');
+    const cardBrandLogo = document.getElementById('cardBrandLogo');
+
+    if (inputNum) {
+        inputNum.addEventListener('input', function (e) {
+            let val = e.target.value.replace(/\D/g, '').substring(0, 16);
+            let formatted = val.match(/.{1,4}/g)?.join(' ') || val;
+            e.target.value = formatted;
+
+            if (formatted.length > 0) {
+                cardNumDisplay.textContent = formatted;
+            } else {
+                cardNumDisplay.textContent = '•••• •••• •••• ••••';
+            }
+
+            // Detectar marca
+            if (val.startsWith('4')) {
+                cardBrandLogo.textContent = 'VISA';
+            } else if (val.startsWith('5')) {
+                cardBrandLogo.textContent = 'Mastercard';
+            } else {
+                cardBrandLogo.textContent = 'CARNET';
+            }
+        });
+    }
+
+    if (inputHolder) {
+        inputHolder.addEventListener('input', function (e) {
+            cardHolderDisplay.textContent = e.target.value.toUpperCase() || 'NOMBRE DEL TITULAR';
+        });
+    }
+
+    if (inputExp) {
+        inputExp.addEventListener('input', function (e) {
+            let val = e.target.value.replace(/\D/g, '').substring(0, 4);
+            if (val.length >= 2) {
+                e.target.value = val.substring(0, 2) + '/' + val.substring(2);
+            } else {
+                e.target.value = val;
+            }
+            cardExpiryDisplay.textContent = e.target.value || 'MM/AA';
+        });
+    }
+
+    // Botón de llenar datos de tarjeta de prueba
+    const btnFillDemo = document.getElementById('btnFillDemoCard');
+    if (btnFillDemo) {
+        btnFillDemo.addEventListener('click', function () {
+            if (window.gpmvAudio) window.gpmvAudio.playClick();
+            inputNum.value = '4532 8890 1234 8899';
+            inputHolder.value = 'JUAN PÉREZ GONZÁLEZ';
+            inputExp.value = '12/28';
+            document.getElementById('inputCardCvv').value = '789';
+
+            cardNumDisplay.textContent = '4532 8890 1234 8899';
+            cardHolderDisplay.textContent = 'JUAN PÉREZ GONZÁLEZ';
+            cardExpiryDisplay.textContent = '12/28';
+            cardBrandLogo.textContent = 'VISA';
+        });
+    }
+
+    // Botones de copiar texto (CLABE, folio, etc.)
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const textToCopy = this.getAttribute('data-text');
+            if (textToCopy) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    if (window.gpmvAudio) window.gpmvAudio.playNotification();
+                    const original = this.textContent;
+                    this.textContent = '✓ Copiado';
+                    this.style.background = '#dcfce7';
+                    this.style.color = '#15803d';
+                    setTimeout(() => {
+                        this.textContent = original;
+                        this.style.background = '';
+                        this.style.color = '';
+                    }, 2000);
+                }).catch(() => {});
+            }
+        });
+    });
+
+    // Función de Simulación de Pago con Animación
+    function ejecutarSimulacionPago(metodoNombre) {
+        if (window.gpmvAudio) window.gpmvAudio.playClick();
+
+        const overlay = document.getElementById('simulacion-overlay');
+        const progressBar = document.getElementById('simProgressBar');
+        const progressPct = document.getElementById('simProgressPct');
+        const stepText = document.getElementById('simModalStep');
+        const titleText = document.getElementById('simModalTitle');
+
+        overlay.style.display = 'flex';
+        titleText.textContent = 'Procesando Pago con ' + metodoNombre;
+
+        // Fase 1: 0% -> 35%
+        progressBar.style.width = '35%';
+        progressPct.textContent = '35%';
+        stepText.textContent = 'Estableciendo canal cifrado SSL/TLS con la pasarela bancaria...';
+
+        // Fase 2: 35% -> 75%
+        setTimeout(() => {
+            if (window.gpmvAudio) window.gpmvAudio.playNotification();
+            progressBar.style.width = '75%';
+            progressPct.textContent = '75%';
+            stepText.textContent = 'Validando autorización bancaria y fondos para Folio {{ detalle.folio }}...';
+        }, 500);
+
+        // Fase 3: 75% -> 100%
+        setTimeout(() => {
+            progressBar.style.width = '100%';
+            progressPct.textContent = '100%';
+            stepText.textContent = '¡Aprobado! Certificando pago y sellando comprobante oficial digital...';
+            if (window.gpmvAudio) window.gpmvAudio.playSuccess();
+        }, 1100);
+
+        // Envío final del formulario
+        setTimeout(() => {
+            formPago.submit();
+        }, 1500);
+    }
+
+    // Conectar botones rápidos de simulación
+    if (btnIniciarPago) {
+        btnIniciarPago.addEventListener('click', function () {
+            ejecutarSimulacionPago(metodoRealInput.value);
+        });
+    }
+
+    const btnSimSPEI = document.getElementById('btnSimularSPEI');
+    if (btnSimSPEI) {
+        btnSimSPEI.addEventListener('click', function () {
+            metodoRealInput.value = 'Transferencia';
+            ejecutarSimulacionPago('Transferencia SPEI');
+        });
+    }
+
+    const btnSimOXXO = document.getElementById('btnSimularOXXO');
+    if (btnSimOXXO) {
+        btnSimOXXO.addEventListener('click', function () {
+            metodoRealInput.value = 'Deposito';
+            ejecutarSimulacionPago('OXXO Pay');
+        });
+    }
+
+    const btnSimCoDi = document.getElementById('btnSimularCoDi');
+    if (btnSimCoDi) {
+        btnSimCoDi.addEventListener('click', function () {
+            metodoRealInput.value = 'Transferencia';
+            ejecutarSimulacionPago('CoDi Bancario');
+        });
+    }
+});
+</script>
+{% endblock %}

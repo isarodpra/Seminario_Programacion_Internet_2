@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Gestionar multas — GPMV CDMX{% endblock %}
+{% block content %}
+<div class="admin-multas-container">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+            <h2 style="color: var(--c-morado); margin-bottom: 0.25rem;">Listado de Multas e Infracciones</h2>
+            <p class="section-subtitle" style="text-align: left; margin: 0;">
+                {% if session['admin']['rol'] == 'Admin' %}
+                    Panel de Administración Principal: Edición total de datos, altas, bajas y auditoría.
+                {% else %}
+                    Módulo Operativo de Tránsito: Registro de sanciones y control de detención vehicular.
+                {% endif %}
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a class="btn btn-primary" href="{{ url_for('admin_nueva_multa') }}">
+                ➕ Registrar Nueva Multa
+            </a>
+            {% if session['admin']['rol'] == 'Admin' %}
+                <a class="btn btn-admin" href="{{ url_for('admin_historial') }}">
+                    📜 Historial de Cambios
+                </a>
+            {% endif %}
+            <a class="btn btn-secondary" href="{{ url_for('admin_panel') }}">
+                ⬅️ Panel
+            </a>
+        </div>
+    </div>
+
+    <table class="tabla">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Folio</th>
+                <th>Fecha</th>
+                <th>Placa</th>
+                <th>Motivo</th>
+                <th>Monto</th>
+                <th>Estatus</th>
+                <th>Ubicación / Corralón</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for m in multas %}
+            <tr>
+                <td>{{ m.id_infraccion }}</td>
+                <td><strong>{{ m.folio }}</strong></td>
+                <td>{{ m.fecha }}</td>
+                <td><span class="placa-badge">{{ m.placa }}</span></td>
+                <td style="max-width: 180px; font-size: 0.9rem;">{{ m.motivo }}</td>
+                <td><strong>${{ '%.2f'|format(m.monto) }}</strong></td>
+                <td>
+                    <span class="badge badge-{{ m.estatus|lower }}">
+                        {% if m.estatus == 'Pendiente' %}⏳{% elif m.estatus == 'Pagada' %}✅{% elif m.estatus == 'Liberada' %}🚗{% endif %} 
+                        {{ m.estatus }}
+                    </span>
+                </td>
+                <td style="font-size: 0.88rem;">
+                    {% if m.corralon %}
+                        <span style="color: var(--c-guinda); font-weight: 700;">🏛️ {{ m.corralon }}</span><br>
+                        <small style="color: var(--c-gris-mutado);">Área: {{ m.area }}</small>
+                    {% else %}
+                        <span style="color: var(--c-gris-mutado); font-style: italic;">Sin corralón</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                        {% if session['admin']['rol'] == 'Admin' %}
+                            <!-- Opciones completas para Administrador Principal -->
+                            <a class="btn btn-sm btn-primary" 
+                               href="{{ url_for('admin_editar_multa', id_infraccion=m.id_infraccion) }}"
+                               title="Editar cualquier dato, estatus o ubicación">
+                                ✏️ Editar
+                            </a>
+                            <form method="POST" 
+                                  action="{{ url_for('admin_eliminar_multa', id_infraccion=m.id_infraccion) }}" 
+                                  style="display: inline;" 
+                                  onsubmit="return confirm('¿Estás seguro de ELIMINAR definitivamente la multa {{ m.folio }}? Esta acción quedará registrada en el historial.');">
+                                <button type="submit" class="btn btn-sm btn-secondary" style="color: var(--c-rojo); border-color: var(--c-rojo);" title="Eliminar multa con registro en auditoría">
+                                    🗑️
+                                </button>
+                            </form>
+                        {% else %}
+                            <!-- Opciones para Operativo: Únicamente actualizar traslado y retención -->
+                            <a class="btn btn-sm btn-secondary" 
+                               href="{{ url_for('operativo_ubicacion', id_infraccion=m.id_infraccion) }}"
+                               title="Actualizar estado de traslado y retención en corralón">
+                                📍 Ubicación
+                            </a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="acciones">
+        <a class="btn btn-secondary" href="{{ url_for('admin_panel') }}">Regresar al panel</a>
+    </div>
+
+</div>
+{% endblock %}

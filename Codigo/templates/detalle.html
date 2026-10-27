@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Detalle de multa — {{ detalle.folio }}{% endblock %}
+{% block content %}
+<div class="detalle-page-container">
+
+    <div class="detalle-header">
+        <h2>Detalle de Multa e Infracción</h2>
+        <span class="badge badge-{{ detalle.estatus|lower }}">
+            {% if detalle.estatus == 'Pendiente' %}⏳{% elif detalle.estatus == 'Pagada' %}✅{% elif detalle.estatus == 'Liberada' %}🚗{% endif %} 
+            {{ detalle.estatus }}
+        </span>
+    </div>
+
+    <div class="detalle-grid">
+        <!-- Tarjeta de Información General -->
+        <div class="card detalle-card-info">
+            <h3>📋 Datos de la Infracción</h3>
+            <div class="info-row">
+                <span class="info-label">Folio Oficial:</span>
+                <span class="info-value"><strong>{{ detalle.folio }}</strong></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Fecha de Infracción:</span>
+                <span class="info-value">{{ detalle.fecha }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Motivo de Sanción:</span>
+                <span class="info-value highlight-motivo">{{ detalle.motivo }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Monto Determinado:</span>
+                <span class="info-value monto-grande">${{ '%.2f'|format(detalle.monto) }} MXN</span>
+            </div>
+
+            <hr class="separator">
+
+            <h3>🚘 Datos del Vehículo</h3>
+            <div class="info-row">
+                <span class="info-label">Placa Vehicular:</span>
+                <span class="info-value"><span class="placa-badge">{{ detalle.placa }}</span></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Vehículo:</span>
+                <span class="info-value">{{ detalle.marca }} {{ detalle.modelo }} ({{ detalle.anio }})</span>
+            </div>
+        </div>
+
+        <!-- Tarjeta de Depósito y Mapa Interactivo -->
+        {% if detalle.corralon %}
+        <div class="card detalle-card-mapa">
+            <div class="corralon-badge-title">
+                <span>🏛️ Depósito Vehicular Asignado</span>
+            </div>
+            <p><strong>Corralón:</strong> {{ detalle.corralon }}</p>
+            <p><strong>Dirección:</strong> {{ detalle.direccion }}</p>
+            <p><strong>Área de Resguardo:</strong> <span class="badge-area">{{ detalle.area }}</span></p>
+            {% if detalle.telefono %}<p><strong>Teléfono:</strong> {{ detalle.telefono }}</p>{% endif %}
+
+            <!-- Elemento Multimedia: Mapa Interactivo con Leaflet sin scripts en línea -->
+            <div class="detalle-map-wrapper">
+                <div id="singleCorralonMap" 
+                     class="single-corralon-map"
+                     data-lat="{{ detalle.latitud | default(19.3734) }}"
+                     data-lng="{{ detalle.longitud | default(-99.1795) }}"
+                     data-corralon="{{ detalle.corralon }}"
+                     data-direccion="{{ detalle.direccion }}"
+                     data-area="{{ detalle.area }}">
+                </div>
+                <div class="map-controls-hint">
+                    <span>🗺️ Mapa interactivo con geolocalización satelital OpenStreetMap</span>
+                    <a href="https://www.google.com/maps/search/?api=1&query={{ detalle.latitud | default(19.3734) }},{{ detalle.longitud | default(-99.1795) }}" 
+                       target="_blank" 
+                       rel="noopener" 
+                       class="btn btn-sm btn-secondary">
+                        🧭 Abrir en Google Maps
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="acciones">
+        {% if detalle.estatus == 'Pendiente' %}
+            <a class="btn btn-primary btn-lg" href="{{ url_for('pagar', id_infraccion=detalle.id_infraccion) }}">
+                💳 Proceder al Pago con Descuento
+            </a>
+        {% endif %}
+        <a class="btn btn-secondary" href="{{ url_for('consulta') }}">
+            ⬅️ Regresar a la consulta
+        </a>
+        <a class="btn btn-secondary" href="{{ url_for('mapa') }}">
+            🗺️ Ver todos los corralones
+        </a>
+    </div>
+
+</div>
+{% endblock %}

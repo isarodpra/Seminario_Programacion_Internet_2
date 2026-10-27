@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Panel administrador — GPMV CDMX{% endblock %}
+{% block content %}
+<div class="admin-panel-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+        <h2 style="color: var(--c-morado); margin-bottom: 0;">Panel administrador</h2>
+        <span class="badge" style="background: #f3e8ff; color: var(--c-morado); border: 1px solid #d8b4fe; font-size: 0.9rem;">
+            🛡️ Modo de Administración Oficial
+        </span>
+    </div>
+
+    <div class="acciones" style="margin-bottom: 1.75rem;">
+        <a class="btn btn-admin" href="{{ url_for('admin_multas') }}">📋 Gestionar multas</a>
+        <a class="btn btn-admin" href="{{ url_for('admin_reportes') }}">📊 Ver reportes detallados</a>
+        <a class="btn btn-secondary" href="{{ url_for('inicio') }}#videos">📹 Ver Tutorial de Administrador</a>
+        <a class="btn btn-secondary" href="{{ url_for('mapa') }}">🗺️ Mapa de Corralones</a>
+    </div>
+
+    <!-- Resumen Multimedia de Multas por Estatus -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <h3>Multas por estatus</h3>
+        <div style="display: flex; gap: 1rem; margin: 1rem 0; flex-wrap: wrap;">
+            {% for m in reportes.multas_por_estatus %}
+            <div style="flex: 1; min-width: 140px; background: #f8fafc; border: 1px solid var(--c-gris-borde); padding: 1rem; border-radius: var(--radius-sm); text-align: center;">
+                <span class="badge badge-{{ m.estatus|lower }}" style="margin-bottom: 0.5rem;">{{ m.estatus }}</span>
+                <p style="font-size: 1.8rem; font-weight: 800; color: var(--c-azul-oscuro); margin: 0.25rem 0;">{{ m.cantidad }}</p>
+                <small style="color: var(--c-gris-mutado);">Infracciones</small>
+            </div>
+            {% endfor %}
+        </div>
+
+        <table class="tabla">
+            <thead>
+                <tr><th>Estatus</th><th>Cantidad</th></tr>
+            </thead>
+            <tbody>
+                {% for m in reportes.multas_por_estatus %}
+                <tr>
+                    <td><span class="badge badge-{{ m.estatus|lower }}">{{ m.estatus }}</span></td>
+                    <td><strong>{{ m.cantidad }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Resumen Multimedia de Pagos por Mes -->
+    <div class="card">
+        <h3>Pagos por mes</h3>
+        <table class="tabla">
+            <thead>
+                <tr><th>Mes</th><th>Cantidad</th><th>Total Recaudado</th></tr>
+            </thead>
+            <tbody>
+                {% for p in reportes.pagos_por_mes %}
+                <tr>
+                    <td><strong>{{ p.mes }}</strong></td>
+                    <td>{{ p.cantidad }} transacciones</td>
+                    <td style="color: var(--c-verde); font-weight: bold;">${{ '%.2f'|format(p.total or 0) }} MXN</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

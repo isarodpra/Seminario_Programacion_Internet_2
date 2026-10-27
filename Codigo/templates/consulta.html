@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Consulta de multas — GPMV CDMX{% endblock %}
+{% block content %}
+<div class="consulta-container">
+    <h2>Consulta de Infracciones y Multas</h2>
+    <p class="section-subtitle" style="text-align: left; margin-bottom: 1.25rem;">
+        Ingresa el número de placa de tu vehículo automotor registrado en la Ciudad de México para consultar sanciones vigentes y aplicar descuentos.
+    </p>
+
+    <form method="POST" class="form-busqueda" onsubmit="if(window.gpmvAudio) window.gpmvAudio.playClick(); document.getElementById('loading-overlay').style.display='flex';">
+        <input type="text" 
+               id="inputPlaca"
+               name="placa" 
+               value="{{ request.form.get('placa', session.get('ciudadano', {}).get('placa', '')) }}"
+               placeholder="Ingresa la placa (ej. ABC1234)" 
+               required 
+               autofocus
+               style="text-transform: uppercase;">
+        <button type="submit" class="btn btn-primary">🔍 Buscar Infracciones</button>
+    </form>
+
+    <div class="demo-chips" style="margin-top: -0.75rem; margin-bottom: 1.5rem;">
+        <span class="demo-label">Placas registradas en el sistema para prueba:</span>
+        <button type="button" class="chip-btn" onclick="document.getElementById('inputPlaca').value='ABC1234'; if(window.gpmvAudio) window.gpmvAudio.playNotification();">ABC1234 (Nissan Versa)</button>
+        <button type="button" class="chip-btn" onclick="document.getElementById('inputPlaca').value='XYZ5678'; if(window.gpmvAudio) window.gpmvAudio.playNotification();">XYZ5678 (Chevrolet Aveo)</button>
+        <button type="button" class="chip-btn" onclick="document.getElementById('inputPlaca').value='QWE9012'; if(window.gpmvAudio) window.gpmvAudio.playNotification();">QWE9012 (VW Jetta)</button>
+    </div>
+
+    {% if multas %}
+        <h3>Resultados encontrados ({{ multas|length }})</h3>
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Folio</th>
+                    <th>Fecha</th>
+                    <th>Motivo</th>
+                    <th>Monto</th>
+                    <th>Estatus</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in multas %}
+                <tr>
+                    <td><strong>{{ m.folio }}</strong></td>
+                    <td>{{ m.fecha }}</td>
+                    <td>{{ m.motivo }}</td>
+                    <td>${{ '%.2f'|format(m.monto) }}</td>
+                    <td>
+                        <span class="badge badge-{{ m.estatus|lower }}">
+                            {% if m.estatus == 'Pendiente' %}⏳{% elif m.estatus == 'Pagada' %}✅{% elif m.estatus == 'Liberada' %}🚗{% endif %} 
+                            {{ m.estatus }}
+                        </span>
+                    </td>
+                    <td>
+                        <a class="btn btn-secondary btn-sm" style="margin-top:0;" href="{{ url_for('detalle', id_infraccion=m.id_infraccion) }}" onclick="if(window.gpmvAudio) window.gpmvAudio.playClick();">
+                            Ver detalle ➡️
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (window.gpmvAudio) window.gpmvAudio.playSuccess();
+        });
+        </script>
+    {% elif request.method == 'POST' %}
+        <div class="card" style="text-align: center; padding: 2rem;">
+            <p style="font-size: 2rem; margin-bottom: 0.5rem;">🎉</p>
+            <p class="mensaje-vacio" style="font-size: 1.1rem; color: #15803d; font-weight: 600;">
+                No se encontraron multas para la placa ingresada.
+            </p>
+            <small style="color: var(--c-gris-mutado);">El vehículo se encuentra al corriente y libre de adeudos viales.</small>
+        </div>
+        <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (window.gpmvAudio) window.gpmvAudio.playNotification();
+        });
+        </script>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+{% block title %}Comprobante Oficial de Pago — GPMV CDMX{% endblock %}
+
+{% block content %}
+<div class="comprobante-wrapper">
+
+    <!-- Indicador de Pasos del Proceso -->
+    <div class="payment-steps">
+        <div class="step-item completed">
+            <div class="step-num">✓</div>
+            <span class="step-label">1. Infracción Verificada</span>
+        </div>
+        <div class="step-item completed">
+            <div class="step-num">✓</div>
+            <span class="step-label">2. Pasarela Simulada</span>
+        </div>
+        <div class="step-item completed">
+            <div class="step-num">✓</div>
+            <span class="step-label">3. Comprobante Oficial</span>
+        </div>
+    </div>
+
+    <!-- TARJETA DEL COMPROBANTE OFICIAL ESTILO CFDI/RECIBO CDMX -->
+    <div class="comprobante-oficial-card" id="areaComprobante">
+        
+        <!-- Encabezado Institucional -->
+        <div class="comprobante-header-gob">
+            <div class="gob-header-flex">
+                <div style="display: flex; align-items: center; gap: 0.85rem;">
+                    <div style="font-size: 2.2rem; line-height: 1;">🏛️</div>
+                    <div class="gob-titles">
+                        <h1>GOBIERNO DE LA CIUDAD DE MÉXICO</h1>
+                        <p>SECRETARÍA DE ADMINISTRACIÓN Y FINANZAS &bull; TESORERÍA DE LA CDMX</p>
+                        <small style="color: #cbd5e1; font-size: 0.78rem;">Sistema de Gestión de Pagos de Multas Vehiculares (GPMV)</small>
+                    </div>
+                </div>
+
+                <div class="gob-folio-box">
+                    <small>Referencia Oficial SAT/CDMX</small>
+                    <strong>{{ pago.referencia }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="comprobante-body">
+            
+            <!-- Banner de Acreditación Exitosa -->
+            <div class="comprobante-status-banner">
+                <div class="status-check-group">
+                    <div class="status-check-icon">✓</div>
+                    <div>
+                        <h2 style="font-size: 1.15rem; color: #166534; margin: 0; font-weight: 800;">
+                            ¡Pago Acreditado Exitosamente!
+                        </h2>
+                        <p style="font-size: 0.85rem; color: #15803d; margin: 0.15rem 0 0 0;">
+                            La transacción fue procesada y certificada por el sistema bancario.
+                        </p>
+                    </div>
+                </div>
+                <div>
+                    <span class="status-badge-pill">✅ Estatus: PAGADA Y LIBERADA</span>
+                </div>
+            </div>
+
+            <!-- Datos en 2 Columnas -->
+            <div class="recibo-grid-info">
+                <!-- Columna 1: Datos de la Transacción -->
+                <div class="recibo-info-box">
+                    <h3>💳 Datos de la Operación</h3>
+                    <div class="recibo-row">
+                        <span>Folio Infracción:</span>
+                        <strong style="color: var(--c-azul-oscuro);">{{ infraccion.folio }}</strong>
+                    </div>
+                    <div class="recibo-row">
+                        <span>ID Transacción:</span>
+                        <span>#{{ "%06d"|format(pago.id_pago) }}</span>
+                    </div>
+                    <div class="recibo-row">
+                        <span>Fecha y Hora de Pago:</span>
+                        <span>{{ pago.fecha_pago }}</span>
+                    </div>
+                    <div class="recibo-row">
+                        <span>Método Empleado:</span>
+                        <span>{{ pago.metodo_pago }}</span>
+                    </div>
+                    <div class="recibo-row">
+                        <span>Autorización Bancaria:</span>
+                        <span style="font-family: monospace;">AUT-{{ "%06d"|format(pago.id_pago * 31415 % 1000000) }}</span>
+                    </div>
+                    <div class="recibo-row">
+                        <span>Canal de Cobro:</span>
+                        <span>Pasarela Digital Simulada CDMX</span>
+                    </div>
+                </div>
+
+                <!-- Columna 2: Datos del Vehículo y Contribuyente -->
+                <div class="recibo-info-box">
+                    <h3>🚗 Datos del Vehículo y Contribuyente</h3>
+                    <div class="recibo-row">
+                        <span>Placa Registrada:</span>
+                        <span class="placa-badge" style="font-size: 0.85rem;">{{ vehiculo.placa }}</span>
+                    </div>
+                    <div class="recibo-row">
+                        <span>Vehículo:</span>
+                        <span>{{ vehiculo.marca }} {{ vehiculo.modelo }} ({{ vehiculo.anio }})</span>
+                    </div>
+                    <div class="recibo-row">
+                        <span>Contribuyente:</span>
+                        <span>{{ ciudadano.nombre }} {{ ciudadano.apellido }}</span>
+                    </div>
+                    <div class="recibo-row">
+                        <span>RFC:</span>
+                        <span style="font-family: monospace;">{{ ciudadano.rfc }}</span>
+                    </div>
+                    <div class="recibo-row">
+                        <span>Motivo Infracción:</span>
+                        <span>{{ infraccion.motivo }}</span>
+                    </div>
+                    {% if corralon %}
+                    <div class="recibo-row" style="background: #fef2f2; padding: 0.35rem 0.5rem; border-radius: 4px;">
+                        <span style="color: var(--c-rojo);">Corralón Asignado:</span>
+                        <strong style="color: var(--c-rojo);">{{ corralon.nombre }} (Listo para liberación)</strong>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Tabla de Desglose de Liquidación -->
+            <div class="recibo-tabla-wrap">
+                <table class="recibo-tabla">
+                    <thead>
+                        <tr>
+                            <th>Concepto</th>
+                            <th>Motivo / Fundamento</th>
+                            <th style="text-align: right;">Importe Base</th>
+                            <th style="text-align: right;">Total Liquidado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <strong>Liquidación de Infracción</strong><br>
+                                <small style="color: var(--c-gris-mutado);">Folio: {{ infraccion.folio }} &bull; Placas: {{ vehiculo.placa }}</small>
+                            </td>
+                            <td>{{ infraccion.motivo }}</td>
+                            <td style="text-align: right;">${{ '%.2f'|format(infraccion.monto) }} MXN</td>
+                            <td style="text-align: right; font-weight: 700; color: var(--c-guinda);">
+                                ${{ '%.2f'|format(pago.monto_pagado) }} MXN
+                            </td>
+                        </tr>
+                        <tr class="total-row">
+                            <td colspan="3" style="text-align: right; padding-right: 1.5rem;">
+                                IMPORTE TOTAL CUBIERTO:
+                            </td>
+                            <td style="text-align: right; color: var(--c-verde);">
+                                ${{ '%.2f'|format(pago.monto_pagado) }} MXN
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Sello Digital de Seguridad & Código QR Oficial -->
+            <div class="sello-seguridad-box">
+                <div class="sello-qr-placeholder">
+                    <!-- SVG QR CODE OFICIAL CDMX -->
+                    <svg viewBox="0 0 100 100" width="108" height="108">
+                        <rect width="100" height="100" fill="white" />
+                        <!-- Corner Markers -->
+                        <rect x="5" y="5" width="24" height="24" fill="#1e293b" />
+                        <rect x="8" y="8" width="18" height="18" fill="white" />
+                        <rect x="11" y="11" width="12" height="12" fill="#7b1e3a" />
+
+                        <rect x="71" y="5" width="24" height="24" fill="#1e293b" />
+                        <rect x="74" y="8" width="18" height="18" fill="white" />
+                        <rect x="77" y="11" width="12" height="12" fill="#7b1e3a" />
+
+                        <rect x="5" y="71" width="24" height="24" fill="#1e293b" />
+                        <rect x="8" y="74" width="18" height="18" fill="white" />
+                        <rect x="11" y="77" width="12" height="12" fill="#7b1e3a" />
+
+                        <!-- Data blocks -->
+                        <rect x="35" y="8" width="10" height="8" fill="#1e293b" />
+                        <rect x="52" y="12" width="12" height="8" fill="#7b1e3a" />
+                        <rect x="35" y="22" width="28" height="6" fill="#1a3d7c" />
+
+                        <rect x="8" y="38" width="10" height="10" fill="#1e293b" />
+                        <rect x="25" y="40" width="14" height="14" fill="#7b1e3a" />
+                        <rect x="44" y="35" width="18" height="18" fill="#1a3d7c" />
+                        <rect x="68" y="38" width="10" height="12" fill="#1e293b" />
+                        <rect x="82" y="42" width="10" height="10" fill="#7b1e3a" />
+
+                        <rect x="36" y="58" width="12" height="12" fill="#1e293b" />
+                        <rect x="54" y="56" width="12" height="12" fill="#7b1e3a" />
+                        <rect x="72" y="60" width="18" height="8" fill="#1a3d7c" />
+
+                        <rect x="38" y="76" width="10" height="14" fill="#1a3d7c" />
+                        <rect x="54" y="80" width="18" height="10" fill="#1e293b" />
+                        <rect x="80" y="76" width="12" height="14" fill="#7b1e3a" />
+
+                        <!-- Center Stamp -->
+                        <circle cx="50" cy="50" r="10" fill="white" stroke="#16a34a" stroke-width="2" />
+                        <text x="50" y="53" font-size="7" font-weight="bold" fill="#16a34a" text-anchor="middle">✓</text>
+                    </svg>
+                </div>
+
+                <div class="sello-texto-legal">
+                    <small>CADENA ORIGINAL DE CERTIFICACIÓN DIGITAL DEL GOBIERNO DE LA CDMX:</small>
+                    <div class="sello-cadena-mono">
+                        ||1.1|{{ pago.referencia }}|{{ pago.fecha_pago }}|{{ '%.2f'|format(pago.monto_pagado) }}|{{ pago.metodo_pago }}|{{ vehiculo.placa }}|CDMX-FINANZAS-SAT-AUTH-9921||
+                    </div>
+
+                    <small>SELLO DIGITAL DE LA TESORERÍA:</small>
+                    <div class="sello-cadena-mono">
+                        k8V9+mXJ2wL0PzQaRtY7uI4oNbV1cXeZsW3qA6sD8fG0hJ2kL4zX7ceF4jK8mN1pQ3sU5wY7zB9cD0fH2jL4n8W1qE3rT5yU7iO9p
+                    </div>
+
+                    <p style="font-size: 0.72rem; color: var(--c-gris-mutado); margin: 0; line-height: 1.3;">
+                        Este documento es una representación digital y física del recibo oficial de pago. Cuenta con validez jurídica y administrativa ante la Secretaría de Seguridad Ciudadana y SEMOVI para trámites vehiculares y retiro de corralón.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Mensaje de Entrega / Corralón -->
+            {% if corralon %}
+            <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.8rem;">🏢</span>
+                    <div>
+                        <strong style="color: var(--c-azul-oscuro); font-size: 0.95rem;">Retiro de Vehículo en {{ corralon.nombre }}</strong>
+                        <p style="margin: 0.15rem 0 0 0; font-size: 0.85rem; color: #1e40af;">
+                            Presenta este comprobante digital o impreso y tu identificación oficial para la liberación sin costo adicional.
+                        </p>
+                    </div>
+                </div>
+                <a href="{{ url_for('mapa') }}" class="btn btn-secondary" style="font-size: 0.85rem;">
+                    🗺️ Ver Corralón en el Mapa
+                </a>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- Barra de Acciones del Comprobante -->
+    <div class="comprobante-acciones-bar">
+        <a class="btn btn-primary" href="{{ url_for('comprobante_pdf', id_pago=pago.id_pago) }}" id="btnDescargarPDF">
+            📥 Descargar Comprobante PDF (Oficial)
+        </a>
+        <button type="button" class="btn btn-secondary" onclick="window.print();" id="btnImprimir">
+            🖨️ Imprimir Comprobante
+        </button>
+        <button type="button" class="btn btn-secondary" id="btnEnviarCorreo" data-correo="{{ ciudadano.correo }}">
+            ✉️ Enviar a mi correo
+        </button>
+        <a class="btn btn-secondary" href="{{ url_for('consulta') }}">
+            🔍 Realizar otra consulta
+        </a>
+    </div>
+
+    <!-- Toast de Notificación Simulado -->
+    <div id="toastEmail" style="display: none; position: fixed; bottom: 25px; right: 25px; background: #1e293b; color: white; padding: 1rem 1.5rem; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); border-left: 5px solid var(--c-verde); z-index: 10000; animation: slideUp 0.3s ease;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-size: 1.3rem;">📬</span>
+            <div>
+                <strong>¡Comprobante enviado!</strong>
+                <p style="margin: 0; font-size: 0.82rem; color: #cbd5e1;" id="toastEmailMsg">
+                    Se envió una copia digital PDF a {{ ciudadano.correo }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Sonido de éxito al cargar la pantalla de comprobante
+    if (window.gpmvAudio) {
+        setTimeout(() => window.gpmvAudio.playSuccess(), 200);
+    }
+
+    // Botón de enviar por correo (simulación)
+    const btnEmail = document.getElementById('btnEnviarCorreo');
+    const toast = document.getElementById('toastEmail');
+
+    if (btnEmail && toast) {
+        btnEmail.addEventListener('click', function () {
+            if (window.gpmvAudio) window.gpmvAudio.playNotification();
+            
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 4000);
+        });
+    }
+
+    // Sonido al descargar PDF
+    const btnPdf = document.getElementById('btnDescargarPDF');
+    if (btnPdf) {
+        btnPdf.addEventListener('click', function () {
+            if (window.gpmvAudio) window.gpmvAudio.playNotification();
+        });
+    }
+});
+</script>
+{% endblock %}

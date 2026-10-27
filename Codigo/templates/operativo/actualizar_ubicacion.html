@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Actualizar Ubicación Vehicular — GPMV CDMX{% endblock %}
+{% block content %}
+<div style="max-width: 700px; margin: 0 auto;">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+            <h2 style="color: var(--c-azul-oscuro); margin-bottom: 0.25rem;">📍 Actualizar Ubicación de Vehículo</h2>
+            <p class="section-subtitle" style="text-align: left; margin: 0;">
+                Módulo Operativo ({{ session['admin']['usuario'] }}) — Actualización de traslado y retención vehicular.
+            </p>
+        </div>
+        <a class="btn btn-secondary" href="{{ url_for('admin_multas') }}">⬅️ Cancelar</a>
+    </div>
+
+    <!-- Info del Vehículo y Multa -->
+    <div class="card" style="background: #f0f9ff; border: 1px solid #bae6fd; margin-bottom: 1.25rem; padding: 1rem 1.25rem;">
+        <h4 style="margin: 0 0 0.75rem; color: var(--c-azul-oscuro);">🚗 Información de la Infracción</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem;">
+            <div>
+                <small style="color: var(--c-gris-mutado);">Folio</small>
+                <p style="margin: 0; font-weight: 800; color: var(--c-guinda);">{{ detalle.folio }}</p>
+            </div>
+            <div>
+                <small style="color: var(--c-gris-mutado);">Placa</small>
+                <p style="margin: 0;"><span class="placa-badge">{{ detalle.placa }}</span></p>
+            </div>
+            <div>
+                <small style="color: var(--c-gris-mutado);">Marca / Modelo</small>
+                <p style="margin: 0; font-size: 0.9rem;">{{ detalle.marca }} {{ detalle.modelo }} ({{ detalle.anio }})</p>
+            </div>
+            <div>
+                <small style="color: var(--c-gris-mutado);">Estatus</small>
+                <p style="margin: 0;"><span class="badge badge-{{ detalle.estatus|lower }}">{{ detalle.estatus }}</span></p>
+            </div>
+        </div>
+        <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #bae6fd; font-size: 0.88rem; color: var(--c-gris-mutado);">
+            Motivo: <strong style="color: var(--c-azul-oscuro);">{{ detalle.motivo }}</strong>
+        </div>
+    </div>
+
+    <!-- Ubicación actual en Corralón -->
+    {% if detalle.corralon %}
+    <div class="card" style="background: #fdf4ff; border: 1px solid #e9d5ff; margin-bottom: 1.25rem; padding: 1rem 1.25rem;">
+        <h4 style="margin: 0 0 0.5rem; color: var(--c-morado);">🏛️ Ubicación Actual en Corralón</h4>
+        <p style="margin: 0; font-size: 0.95rem;">
+            <strong>{{ detalle.corralon }}</strong> — Área: {{ detalle.area or 'N/A' }}<br>
+            <small style="color: var(--c-gris-mutado);">{{ detalle.direccion or '' }}</small>
+        </p>
+    </div>
+    {% else %}
+    <div class="card" style="background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 1.25rem; padding: 1rem 1.25rem;">
+        <p style="margin: 0; color: #166534; font-size: 0.95rem;">
+            ✅ Este vehículo actualmente <strong>NO se encuentra en ningún corralón</strong>.
+        </p>
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <form method="POST" action="{{ url_for('operativo_ubicacion', id_infraccion=detalle.id_infraccion) }}">
+
+            <h3 style="color: var(--c-guinda); border-bottom: 2px solid var(--c-gris-borde); padding-bottom: 0.4rem; margin-top: 0;">
+                🔄 Actualizar Traslado y Retención
+            </h3>
+
+            <!-- Estado de detención -->
+            <div style="margin-bottom: 1rem;">
+                <label for="estado_detencion">Estado de Detención del Vehículo</label>
+                <select id="estado_detencion" name="estado_detencion">
+                    <option value="En resguardo">🔒 En resguardo en corralón</option>
+                    <option value="En traslado">🚛 En traslado hacia corralón</option>
+                    <option value="Pendiente de retiro">⏳ Pendiente de retiro por el propietario</option>
+                    <option value="Liberado por pago">✅ Liberado por pago o trámite</option>
+                    <option value="Retirado">🚗 Vehículo retirado del corralón</option>
+                </select>
+            </div>
+
+            <!-- Remisión a Corralón -->
+            <div style="background: #fdf2f4; border: 1px solid #fecdd3; border-radius: var(--radius-sm); padding: 1rem; margin: 1rem 0;">
+                <label style="display: flex; align-items: center; gap: 0.65rem; margin: 0; cursor: pointer; font-size: 1.05rem; color: var(--c-guinda);">
+                    <input type="checkbox"
+                           id="remitir_corralon"
+                           name="remitir_corralon"
+                           value="1"
+                           {% if detalle.corralon %}checked{% endif %}
+                           onchange="document.getElementById('seccionCorralon').style.display = this.checked ? 'block' : 'none';"
+                           style="width: 20px; height: 20px; margin: 0;">
+                    <strong>¿Registrar vehículo en Depósito Vehicular (Corralón)?</strong>
+                </label>
+                <small style="display: block; margin-top: 0.35rem; color: #881337;">
+                    Activa esta opción para indicar que el vehículo fue o sigue remitido a un corralón oficial de la SSC.
+                    Si se desmarca, se registrará la salida del corralón.
+                </small>
+            </div>
+
+            <!-- Campos del corralón -->
+            <div id="seccionCorralon" style="display: {% if detalle.corralon %}block{% else %}none{% endif %}; padding: 1rem; background: #f8fafc; border: 1px solid var(--c-gris-borde); border-radius: var(--radius-sm); margin-bottom: 1.25rem;">
+                <label for="nombre_corralon">Depósito Vehicular Oficial de Destino / Ubicación Actual</label>
+                <select id="nombre_corralon" name="nombre_corralon" onchange="actualizarDirCorralon(this.value)">
+                    <option value="">-- Selecciona el corralón --</option>
+                    {% for nombre, geo in corralones.items() %}
+                    <option value="{{ nombre }}" data-dir="{{ geo.direccion }}" data-tel="{{ geo.telefono }}" data-horario="{{ geo.horario }}"
+                        {% if detalle.corralon and nombre.lower() in (detalle.corralon or '').lower() %}selected{% endif %}>
+                        {{ nombre }} — Zona {{ geo.zona }}
+                    </option>
+                    {% endfor %}
+                </select>
+
+                <!-- Info rápida del corralón seleccionado -->
+                <div id="infoCorralon" style="display: none; margin-top: 0.75rem; padding: 0.75rem; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); font-size: 0.88rem;">
+                    📞 Tel: <span id="telCorralon">—</span> &nbsp;|&nbsp;
+                    🕐 Horario: <span id="horarioCorralon">—</span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-top: 0.75rem;">
+                    <div>
+                        <label for="direccion_corralon">Dirección del Depósito</label>
+                        <input type="text" id="direccion_corralon" name="direccion_corralon"
+                               value="{{ detalle.direccion or '' }}" placeholder="Dirección oficial">
+                    </div>
+                    <div>
+                        <label for="area_corralon">Área / Cajón de Resguardo</label>
+                        <input type="text" id="area_corralon" name="area_corralon"
+                               value="{{ detalle.area or '' }}" placeholder="Ej. A-12" style="text-transform: uppercase;">
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radius-sm); padding: 0.85rem 1rem; margin: 1rem 0; font-size: 0.9rem;">
+                ℹ️ <strong>Nota:</strong> Como Operativo solo puedes actualizar el estado de traslado y la ubicación del vehículo.
+                No puedes modificar el monto, motivo ni folio de la multa. Todos los cambios quedan registrados en auditoría.
+            </div>
+
+            <div class="acciones" style="margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
+                    💾 Actualizar Ubicación y Estado de Detención
+                </button>
+                <a class="btn btn-secondary" href="{{ url_for('admin_multas') }}">Cancelar</a>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+<script>
+function actualizarDirCorralon(nombre) {
+    const sel = document.getElementById('nombre_corralon');
+    const opt = sel.options[sel.selectedIndex];
+    const dir = opt.getAttribute('data-dir') || '';
+    const tel = opt.getAttribute('data-tel') || '';
+    const horario = opt.getAttribute('data-horario') || '';
+
+    document.getElementById('direccion_corralon').value = dir;
+    if (!document.getElementById('area_corralon').value) {
+        document.getElementById('area_corralon').value = 'A-01';
+    }
+
+    if (tel || horario) {
+        document.getElementById('infoCorralon').style.display = 'block';
+        document.getElementById('telCorralon').textContent = tel || '—';
+        document.getElementById('horarioCorralon').textContent = horario || '—';
+    } else {
+        document.getElementById('infoCorralon').style.display = 'none';
+    }
+}
+
+// Si ya hay un corralón seleccionado al cargar
+document.addEventListener('DOMContentLoaded', function() {
+    const sel = document.getElementById('nombre_corralon');
+    if (sel && sel.value) {
+        actualizarDirCorralon(sel.value);
+    }
+});
+</script>
+{% endblock %}

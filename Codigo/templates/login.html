@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Inicio de Sesión — GPMV CDMX{% endblock %}
+{% block content %}
+<div class="login-wrapper">
+    <div class="card card-login">
+        <div class="login-header">
+            <div class="login-badge-icon">🏛️</div>
+            <h2>Acceso al Sistema GPMV</h2>
+            <p class="login-subtitle">Gestión de Pagos de Multas Vehiculares CDMX</p>
+        </div>
+
+        <!-- Selector de Pestañas Ciudadano / Administrador -->
+        <div class="login-tabs" role="tablist">
+            <button type="button" 
+                    id="tabBtnCiudadano" 
+                    class="login-tab-btn {% if tab != 'admin' %}active{% endif %}"
+                    onclick="switchLoginTab('ciudadano')">
+                🚗 Conductor / Ciudadano
+            </button>
+            <button type="button" 
+                    id="tabBtnAdmin" 
+                    class="login-tab-btn {% if tab == 'admin' %}active{% endif %}"
+                    onclick="switchLoginTab('admin')">
+                🛡️ Administrador
+            </button>
+        </div>
+
+        <!-- Formulario Ciudadano -->
+        <div id="loginFormCiudadano" class="login-tab-content {% if tab != 'admin' %}active{% endif %}">
+            <div class="login-hint">
+                <span>ℹ️</span>
+                <small>Ingresa tu <strong>placa vehicular</strong>, <strong>RFC</strong> o <strong>correo electrónico</strong> para acceder a tu historial de infracciones y descuentos.</small>
+            </div>
+            <form method="POST" action="{{ url_for('login') }}" class="form-login-animated">
+                <input type="hidden" name="tipo" value="ciudadano">
+                <label for="identificador">Placa vehicular o RFC</label>
+                <div class="input-icon-group">
+                    <span class="input-icon">🚘</span>
+                    <input type="text" 
+                           id="identificador" 
+                           name="identificador" 
+                           placeholder="Ej. ABC1234 o PERJ850101ABC" 
+                           required 
+                           autofocus
+                           autocomplete="off"
+                           style="text-transform: uppercase;">
+                </div>
+
+                <div class="demo-chips">
+                    <span class="demo-label">Accesos rápidos de prueba:</span>
+                    <button type="button" class="chip-btn" onclick="setIdentificador('ABC1234')">Placa ABC1234</button>
+                    <button type="button" class="chip-btn" onclick="setIdentificador('XYZ5678')">Placa XYZ5678</button>
+                    <button type="button" class="chip-btn" onclick="setIdentificador('PERJ850101ABC')">RFC Juan Pérez</button>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    Ingresar como Ciudadano
+                </button>
+            </form>
+        </div>
+
+        <!-- Formulario Administrador -->
+        <div id="loginFormAdmin" class="login-tab-content {% if tab == 'admin' %}active{% endif %}">
+            <div class="login-hint hint-admin">
+                <span>🛡️</span>
+                <small>Acceso restringido para personal operativo y administradores de la Secretaría de Seguridad Ciudadana.</small>
+            </div>
+            <form method="POST" action="{{ url_for('login') }}" class="form-login-animated">
+                <input type="hidden" name="tipo" value="admin">
+                <label for="usuario">Usuario</label>
+                <div class="input-icon-group">
+                    <span class="input-icon">👤</span>
+                    <input type="text" id="usuario" name="usuario" placeholder="Usuario administrador" required autocomplete="username">
+                </div>
+
+                <label for="contrasena">Contraseña</label>
+                <div class="input-icon-group">
+                    <span class="input-icon">🔑</span>
+                    <input type="password" id="contrasena" name="contrasena" placeholder="Contraseña de acceso" required autocomplete="current-password">
+                </div>
+
+                <div class="demo-chips">
+                    <span class="demo-label">Credenciales demo:</span>
+                    <button type="button" class="chip-btn" onclick="setAdminCreds('admin', 'admin123')">Admin Principal</button>
+                    <button type="button" class="chip-btn" onclick="setAdminCreds('operativo', 'oper123')">Operativo Tránsito</button>
+
+                </div>
+
+                <button type="submit" class="btn btn-admin btn-block">
+                    Ingresar al Panel
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function switchLoginTab(type) {
+    const tabC = document.getElementById('tabBtnCiudadano');
+    const tabA = document.getElementById('tabBtnAdmin');
+    const formC = document.getElementById('loginFormCiudadano');
+    const formA = document.getElementById('loginFormAdmin');
+    
+    if (type === 'admin') {
+        tabC.classList.remove('active');
+        tabA.classList.add('active');
+        formC.classList.remove('active');
+        formA.classList.add('active');
+        document.getElementById('usuario').focus();
+    } else {
+        tabA.classList.remove('active');
+        tabC.classList.add('active');
+        formA.classList.remove('active');
+        formC.classList.add('active');
+        document.getElementById('identificador').focus();
+    }
+    if (window.gpmvAudio) window.gpmvAudio.playClick();
+}
+
+function setIdentificador(val) {
+    const input = document.getElementById('identificador');
+    input.value = val;
+    input.focus();
+    if (window.gpmvAudio) window.gpmvAudio.playNotification();
+}
+
+function setAdminCreds(u, p) {
+    document.getElementById('usuario').value = u;
+    document.getElementById('contrasena').value = p;
+    document.getElementById('contrasena').focus();
+    if (window.gpmvAudio) window.gpmvAudio.playNotification();
+}
+</script>
+{% endblock %}

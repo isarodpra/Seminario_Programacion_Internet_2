@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+{% block title %}Inicio e Información — GPMV CDMX{% endblock %}
+{% block content %}
+<div class="inicio-container">
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <span class="hero-badge">🏛️ Gobierno de la Ciudad de México &bull; SEMOVI &bull; SSC</span>
+            <h1 class="hero-title">Gestor de Pagos de Multas Vehiculares (GPMV)</h1>
+            <p class="hero-description">
+                Plataforma tecnológica oficial diseñada para transparentar, agilizar y modernizar 
+                la consulta de infracciones, aplicación de descuentos por pronto pago y la liberación 
+                inmediata de vehículos en depósitos vehiculares (corralones).
+            </p>
+            
+            {% if session.get('ciudadano') %}
+                <div class="user-welcome-card">
+                    <div class="user-welcome-avatar">👤</div>
+                    <div class="user-welcome-info">
+                        <h3>Bienvenido(a), {{ session['ciudadano']['nombre'] }} {{ session['ciudadano']['apellido'] }}</h3>
+                        <p>Vehículo registrado: <strong>{{ session['ciudadano']['marca'] }} {{ session['ciudadano']['modelo'] }} ({{ session['ciudadano']['anio'] }})</strong> &bull; Placa: <span class="placa-badge">{{ session['ciudadano']['placa'] }}</span></p>
+                    </div>
+                    <a href="{{ url_for('consulta') }}" class="btn btn-primary btn-sm">Ver mis multas</a>
+                </div>
+            {% elif session.get('admin') %}
+                <div class="user-welcome-card welcome-admin">
+                    <div class="user-welcome-avatar">🛡️</div>
+                    <div class="user-welcome-info">
+                        <h3>Sesión Activa: {{ session['admin']['usuario'] }} (Rol: {{ session['admin']['rol'] }})</h3>
+                        <p>Tienes privilegios de administración, supervisión de corralones y reportes estadísticos.</p>
+                    </div>
+                    <a href="{{ url_for('admin_panel') }}" class="btn btn-admin btn-sm">Ir al Panel</a>
+                </div>
+            {% endif %}
+
+            <div class="hero-actions">
+                <a href="{{ url_for('consulta') }}" class="btn btn-primary hero-btn">
+                    🔍 Consultar Multas por Placa
+                </a>
+                <a href="{{ url_for('mapa') }}" class="btn btn-secondary hero-btn">
+                    🗺️ Ver Mapa de Corralones
+                </a>
+                <a href="#videos" class="btn btn-accent hero-btn">
+                    📹 Ver Videos Tutoriales
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ¿Qué hace este programa? (Módulos y Beneficios) -->
+    <section class="info-section">
+        <div class="section-header">
+            <h2>¿Qué hace el Gestor de Multas Vehiculares?</h2>
+            <p class="section-subtitle">Conoce las funciones principales diseñadas para facilitar trámites a conductores y autoridades.</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon" style="background: rgba(26, 61, 124, 0.1); color: var(--c-azul-oscuro);">🔍</div>
+                <h3>1. Consulta Digital Inmediata</h3>
+                <p>Ingresa tu número de placa o folio para conocer de forma instantánea el historial de sanciones, motivo de infracción, fecha y estatus oficial.</p>
+                <div class="feature-footer">
+                    <span class="feature-tag">Sin filas</span>
+                    <span class="feature-tag">24/7 disponible</span>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon" style="background: rgba(255, 217, 61, 0.2); color: #b78103;">🏷️</div>
+                <h3>2. Descuentos por Pronto Pago</h3>
+                <p>Aplica automáticamente bonificaciones de hasta el <strong>20% de descuento</strong> sobre el monto de la sanción si pagas dentro del periodo de vigencia legal.</p>
+                <div class="feature-footer">
+                    <span class="feature-tag">Ahorro directo</span>
+                    <span class="feature-tag">Cálculo automático</span>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon" style="background: rgba(40, 167, 69, 0.1); color: var(--c-verde);">💳</div>
+                <h3>3. Pago Seguro Multicanal</h3>
+                <p>Realiza tu pago en línea con confirmación inmediata mediante tarjeta bancaria, transferencia electrónica SPEI o generación de línea de captura.</p>
+                <div class="feature-footer">
+                    <span class="feature-tag">Encriptado seguro</span>
+                    <span class="feature-tag">Antifraude</span>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon" style="background: rgba(74, 144, 217, 0.1); color: var(--c-azul-claro);">🚗</div>
+                <h3>4. Liberación de Corralón</h3>
+                <p>Si tu vehículo fue remitido al corralón, el sistema actualiza automáticamente el estatus a <strong>Liberada</strong> una vez cubiertos los adeudos pendientes.</p>
+                <div class="feature-footer">
+                    <span class="feature-tag">Sincronización en vivo</span>
+                    <span class="feature-tag">Sin intermediarios</span>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon" style="background: rgba(123, 30, 58, 0.1); color: var(--c-guinda);">📄</div>
+                <h3>5. Comprobante Digital Oficial</h3>
+                <p>Generación y descarga instantánea de comprobante de pago en formato PDF con folio fiscal, código de barras y referencia oficial de la CDMX.</p>
+                <div class="feature-footer">
+                    <span class="feature-tag">Validez jurídica</span>
+                    <span class="feature-tag">Descarga PDF</span>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon" style="background: rgba(106, 61, 154, 0.1); color: var(--c-morado);">🗺️</div>
+                <h3>6. Geolocalización de Corralones</h3>
+                <p>Ubica en el mapa interactivo el depósito vehicular exacto donde se encuentra tu auto, con horarios de atención 24 horas, teléfono y área de resguardo.</p>
+                <div class="feature-footer">
+                    <span class="feature-tag">Mapa OpenStreetMap</span>
+                    <span class="feature-tag">Rutas GPS</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECCIÓN DE VIDEOS TUTORIALES (MULTIMEDIA) -->
+    <section id="videos" class="videos-section">
+        <div class="section-header">
+            <span class="section-pill">🎥 Elemento Multimedia Interactivo</span>
+            <h2>Videos Tutoriales de Uso del Sistema</h2>
+            <p class="section-subtitle">Aprende a utilizar cada función del sistema GPMV mediante nuestras guías interactivas para ciudadanos y administradores.</p>
+        </div>
+
+        <!-- Selector de Video (Usuario vs Admin) -->
+        <div class="video-role-selector">
+            <button type="button" 
+                    id="btnRoleUser" 
+                    class="role-btn active"
+                    data-role="user">
+                👤 Videos para el Ciudadano / Conductor
+            </button>
+            <button type="button" 
+                    id="btnRoleAdmin" 
+                    class="role-btn"
+                    data-role="admin">
+                🛡️ Video para el Administrador / Personal de Tránsito
+            </button>
+        </div>
+
+        <!-- Contenedor del Reproductor Multimedia Interactivo -->
+        <div class="video-player-container">
+            <div class="video-player-frame">
+                
+                <!-- Pantalla del Reproductor -->
+                <div class="video-screen" id="videoScreen">
+                    <canvas id="videoCanvas" width="960" height="540"></canvas>
+                    
+                    <!-- Overlay de Pausa / Inicio -->
+                    <div class="video-overlay" id="videoOverlay" role="button" tabindex="0">
+                        <div class="video-play-big-btn">
+                            <span id="bigPlayIcon">▶</span>
+                        </div>
+                        <p id="videoOverlayText">Haz clic para reproducir el video tutorial interactivo</p>
+                    </div>
+
+                    <!-- Indicador de Capítulo Actual -->
+                    <div class="video-chapter-badge" id="videoChapterBadge">
+                        Paso 1: Consulta de Placa
+                    </div>
+
+                    <!-- Indicador HD -->
+                    <div class="video-quality-badge">HD 1080p</div>
+                </div>
+
+                <!-- Barra de Controles Multimedia -->
+                <div class="video-controls-bar">
+                    <button type="button" class="ctrl-btn" id="btnPlayPause" title="Reproducir / Pausar">
+                        <span id="ctrlPlayIcon">▶</span>
+                    </button>
+                    
+                    <div class="video-progress-wrapper" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                        <div class="video-progress-bar">
+                            <div class="video-progress-filled" id="videoProgressFilled"></div>
+                        </div>
+                    </div>
+
+                    <div class="video-time-display">
+                        <span id="currentTimeText">00:00</span> / <span id="totalTimeText">01:30</span>
+                    </div>
+
+                    <button type="button" class="ctrl-btn" id="btnVideoSound" title="Silenciar / Activar audio">
+                        <span id="videoSoundIcon">🔊</span>
+                    </button>
+
+                    <button type="button" class="ctrl-btn" id="btnRestartVideo" title="Reiniciar video">
+                        🔄
+                    </button>
+
+                    <button type="button" class="ctrl-btn" id="btnFullscreen" title="Pantalla completa">
+                        ⛶
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel Lateral de Capítulos y Guía Rápida -->
+            <div class="video-playlist-sidebar">
+                <div class="playlist-header">
+                    <h4 id="playlistTitle">Capítulos del Tutorial: Ciudadano</h4>
+                    <small>Haz clic en cualquier paso para saltar directamente:</small>
+                </div>
+
+                <!-- Lista de Capítulos para Ciudadano -->
+                <div id="playlistUser" class="playlist-list active">
+                    <div class="playlist-item active" data-chapter="0" role="button" tabindex="0">
+                        <span class="item-number">1</span>
+                        <div class="item-info">
+                            <h5>Ingreso y Consulta de Placa</h5>
+                            <small>⏱️ 00:00 - Búsqueda de infracciones por placa</small>
+                        </div>
+                    </div>
+                    <div class="playlist-item" data-chapter="1" role="button" tabindex="0">
+                        <span class="item-number">2</span>
+                        <div class="item-info">
+                            <h5>Revisión de Multas y Descuentos</h5>
+                            <small>⏱️ 00:25 - Aplicación del 20% de descuento</small>
+                        </div>
+                    </div>
+                    <div class="playlist-item" data-chapter="2" role="button" tabindex="0">
+                        <span class="item-number">3</span>
+                        <div class="item-info">
+                            <h5>Pago Digital y Comprobante PDF</h5>
+                            <small>⏱️ 00:50 - Pasarela de pago y descarga de recibo</small>
+                        </div>
+                    </div>
+                    <div class="playlist-item" data-chapter="3" role="button" tabindex="0">
+                        <span class="item-number">4</span>
+                        <div class="item-info">
+                            <h5>Ubicación del Corralón en el Mapa</h5>
+                            <small>⏱️ 01:10 - Localización geográfica y retiro</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Capítulos para Administrador -->
+                <div id="playlistAdmin" class="playlist-list">
+                    <div class="playlist-item active" data-admin-chapter="0" role="button" tabindex="0">
+                        <span class="item-number">1</span>
+                        <div class="item-info">
+                            <h5>Acceso Seguro al Panel Admin</h5>
+                            <small>⏱️ 00:00 - Autenticación cifrada con contraseña</small>
+                        </div>
+                    </div>
+                    <div class="playlist-item" data-admin-chapter="1" role="button" tabindex="0">
+                        <span class="item-number">2</span>
+                        <div class="item-info">
+                            <h5>Gestión de Infracciones y Estatus</h5>
+                            <small>⏱️ 00:30 - Filtrado de multas y liberación vehicular</small>
+                        </div>
+                    </div>
+                    <div class="playlist-item" data-admin-chapter="2" role="button" tabindex="0">
+                        <span class="item-number">3</span>
+                        <div class="item-info">
+                            <h5>Métricas de Recaudación y Reportes</h5>
+                            <small>⏱️ 01:00 - Estadísticas mensuales y auditoría</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Caja de Consejos / Key Takeaways -->
+                <div class="video-tips-card">
+                    <h5>💡 Consejo Útil:</h5>
+                    <p id="videoTipText">Paga dentro de los primeros 15 días hábiles para garantizar tu 20% de descuento automático.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Acceso Rápido al Mapa Interactivo -->
+    <section class="map-preview-section">
+        <div class="map-preview-card">
+            <div class="map-preview-info">
+                <span class="section-pill">📍 Cobertura Integral CDMX</span>
+                <h2>Mapa de Depósitos Vehiculares Oficiales</h2>
+                <p>
+                    Consulta en tiempo real los 5 corralones principales de la Ciudad de México: 
+                    Corralón Central, Norte, Oriente, Poniente y Sur. Conoce su ubicación satelital, 
+                    teléfonos de atención 24 horas y requisitos indispensables para liberar tu vehículo.
+                </p>
+                <div class="map-stats">
+                    <div class="map-stat-item">
+                        <strong>5</strong>
+                        <span>Corralones oficiales</span>
+                    </div>
+                    <div class="map-stat-item">
+                        <strong>24/7</strong>
+                        <span>Atención continua</span>
+                    </div>
+                    <div class="map-stat-item">
+                        <strong>100%</strong>
+                        <span>Gratis y digital</span>
+                    </div>
+                </div>
+                <div class="map-preview-actions">
+                    <a href="{{ url_for('mapa') }}" class="btn btn-primary">
+                        🗺️ Explorar Mapa Completo
+                    </a>
+                </div>
+            </div>
+            <a href="{{ url_for('mapa') }}" class="map-preview-visual" style="text-decoration: none; display: block;">
+                <div class="map-mini-pin pin-1"><span>🏛️</span> Central</div>
+                <div class="map-mini-pin pin-2"><span>🚗</span> Norte</div>
+                <div class="map-mini-pin pin-3"><span>📍</span> Oriente</div>
+                <div class="map-mini-pin pin-4"><span>🔎</span> Poniente</div>
+                <div class="map-mini-pin pin-5"><span>🚩</span> Sur</div>
+                <div class="map-overlay-banner">
+                    Haz clic para abrir el Mapa Interactivo con Leaflet
+                </div>
+            </a>
+        </div>
+    </section>
+
+</div>
+{% endblock %}

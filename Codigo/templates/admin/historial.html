@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Historial de Auditoría — GPMV CDMX{% endblock %}
+{% block content %}
+<div class="admin-multas-container">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+            <h2 style="color: var(--c-morado); margin-bottom: 0.25rem;">📜 Historial de Auditoría y Cambios</h2>
+            <p class="section-subtitle" style="text-align: left; margin: 0;">
+                Registro detallado de todas las acciones realizadas por administradores y personal operativo.
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a class="btn btn-admin" href="{{ url_for('admin_multas') }}">📋 Gestionar Multas</a>
+            <a class="btn btn-secondary" href="{{ url_for('admin_panel') }}">⬅️ Panel</a>
+        </div>
+    </div>
+
+    <!-- Filtros de Búsqueda -->
+    <div class="card" style="margin-bottom: 1.5rem; padding: 1.25rem;">
+        <form method="GET" action="{{ url_for('admin_historial') }}" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+            <div style="flex: 1; min-width: 200px;">
+                <label for="accion" style="font-size: 0.85rem; color: var(--c-gris-mutado); margin-bottom: 0.25rem; display: block;">Filtrar por Tipo de Acción</label>
+                <select id="accion" name="accion" style="margin: 0;">
+                    <option value="">— Todas las acciones —</option>
+                    {% for a in acciones %}
+                    <option value="{{ a }}" {% if filtro_accion == a %}selected{% endif %}>
+                        {% if a == 'CREAR_MULTA_ADMIN' %}➕ Crear Multa (Admin)
+                        {% elif a == 'CREAR_MULTA_OPERATIVO' %}➕ Crear Multa (Operativo)
+                        {% elif a == 'EDITAR_MULTA_ADMIN' %}✏️ Editar Multa
+                        {% elif a == 'ELIMINAR_MULTA_ADMIN' %}🗑️ Eliminar Multa
+                        {% elif a == 'ACTUALIZAR_UBICACION_OPERATIVO' %}📍 Actualizar Ubicación
+                        {% else %}{{ a }}
+                        {% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="flex: 1; min-width: 180px;">
+                <label for="usuario" style="font-size: 0.85rem; color: var(--c-gris-mutado); margin-bottom: 0.25rem; display: block;">Filtrar por Usuario</label>
+                <input type="text" id="usuario" name="usuario" placeholder="Nombre de usuario..." value="{{ filtro_usuario or '' }}" style="margin: 0;">
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button type="submit" class="btn btn-primary" style="padding: 0.6rem 1.2rem;">🔍 Filtrar</button>
+                <a class="btn btn-secondary" href="{{ url_for('admin_historial') }}" style="padding: 0.6rem 1.2rem;">✖ Limpiar</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Estadísticas Rápidas -->
+    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 150px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 1rem; border-radius: var(--radius-sm); text-align: center;">
+            <p style="font-size: 2rem; font-weight: 800; margin: 0;">{{ historial|length }}</p>
+            <small>Registros mostrados</small>
+        </div>
+        <div style="flex: 1; min-width: 150px; background: linear-gradient(135deg, #f093fb, #f5576c); color: white; padding: 1rem; border-radius: var(--radius-sm); text-align: center;">
+            <p style="font-size: 2rem; font-weight: 800; margin: 0;">{{ acciones|length }}</p>
+            <small>Tipos de acciones</small>
+        </div>
+    </div>
+
+    <!-- Tabla de Historial -->
+    {% if historial %}
+    <div style="overflow-x: auto;">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha y Hora</th>
+                    <th>Usuario</th>
+                    <th>Rol</th>
+                    <th>Tipo de Acción</th>
+                    <th>Folio</th>
+                    <th>Descripción Detallada</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in historial %}
+                <tr>
+                    <td><small style="color: var(--c-gris-mutado);">#{{ h.id_historial }}</small></td>
+                    <td>
+                        <strong>{{ h.fecha_hora.strftime('%d/%m/%Y') if h.fecha_hora else 'N/A' }}</strong><br>
+                        <small style="color: var(--c-gris-mutado);">{{ h.fecha_hora.strftime('%H:%M:%S') if h.fecha_hora else '' }}</small>
+                    </td>
+                    <td>
+                        <span style="font-weight: 700; color: var(--c-azul-oscuro);">{{ h.usuario }}</span>
+                    </td>
+                    <td>
+                        {% if h.rol == 'Admin' %}
+                            <span class="badge" style="background: #f3e8ff; color: #7e22ce; border: 1px solid #d8b4fe;">🛡️ Admin</span>
+                        {% else %}
+                            <span class="badge" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">👮 Operativo</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if h.accion == 'CREAR_MULTA_ADMIN' %}
+                            <span class="badge badge-pendiente">➕ Crear (Admin)</span>
+                        {% elif h.accion == 'CREAR_MULTA_OPERATIVO' %}
+                            <span class="badge" style="background: #dcfce7; color: #166534; border: 1px solid #86efac;">➕ Crear (Op.)</span>
+                        {% elif h.accion == 'EDITAR_MULTA_ADMIN' %}
+                            <span class="badge" style="background: #fef9c3; color: #854d0e; border: 1px solid #fde047;">✏️ Editar</span>
+                        {% elif h.accion == 'ELIMINAR_MULTA_ADMIN' %}
+                            <span class="badge badge-liberada" style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;">🗑️ Eliminar</span>
+                        {% elif h.accion == 'ACTUALIZAR_UBICACION_OPERATIVO' %}
+                            <span class="badge badge-pagada" style="background: #cffafe; color: #155e75; border: 1px solid #67e8f9;">📍 Ubicación</span>
+                        {% else %}
+                            <span class="badge">{{ h.accion }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if h.folio %}
+                            <strong style="color: var(--c-guinda);">{{ h.folio }}</strong>
+                        {% else %}
+                            <span style="color: var(--c-gris-mutado); font-style: italic;">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="max-width: 350px; font-size: 0.88rem; line-height: 1.5;">
+                        {{ h.detalles }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: 3rem; color: var(--c-gris-mutado);">
+        <p style="font-size: 3rem; margin: 0;">📭</p>
+        <p style="font-size: 1.1rem; margin: 0.75rem 0;">No se encontraron registros con los filtros seleccionados.</p>
+        <a class="btn btn-secondary" href="{{ url_for('admin_historial') }}">Ver todo el historial</a>
+    </div>
+    {% endif %}
+
+    <div class="acciones" style="margin-top: 1.5rem;">
+        <a class="btn btn-secondary" href="{{ url_for('admin_panel') }}">Regresar al panel</a>
+    </div>
+
+</div>
+{% endblock %}

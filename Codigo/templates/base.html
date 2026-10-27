@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GPMV CDMX - Gestor de Multas Vehiculares{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Segoe+UI:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Leaflet CSS para Mapas Interactivos -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <a href="{{ url_for('index') }}" class="logo-link">
+                <span class="logo-icon">🚗</span>
+                <span class="logo-text">GPMV <span class="logo-cdmx">CDMX</span></span>
+            </a>
+        </div>
+        <nav class="nav-links">
+            <a href="{{ url_for('inicio') }}" class="nav-item">🏠 Inicio</a>
+            <a href="{{ url_for('consulta') }}" class="nav-item">🔍 Consultar multas</a>
+            <a href="{{ url_for('mapa') }}" class="nav-item">🗺️ Mapa de corralones</a>
+            <a href="{{ url_for('inicio') }}#videos" class="nav-item">📹 Videos tutoriales</a>
+            {% if session.get('admin') %}
+            <a href="{{ url_for('admin_panel') }}" class="nav-item nav-badge-admin">🛡️ Panel admin</a>
+            <a href="{{ url_for('logout') }}" class="nav-item nav-logout">Salir ({{ session['admin']['usuario'] }})</a>
+            {% elif session.get('ciudadano') %}
+            <span class="nav-item nav-badge-user">👤 {{ session['ciudadano']['nombre'] }}</span>
+            <a href="{{ url_for('logout') }}" class="nav-item nav-logout">Cerrar sesión</a>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="nav-item nav-login-btn">🔐 Iniciar sesión</a>
+            {% endif %}
+            <button id="soundToggleBtn" class="btn-sound-toggle" type="button"
+                title="Activar/Silenciar efectos de audio" aria-label="Efectos de sonido">
+                <span id="soundIcon">🔊</span>
+                <span id="soundText">Sonido</span>
+            </button>
+        </nav>
+    </header>
+
+    <main class="container">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="flash">
+            {% for m in messages %}
+            <p>{{ m }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p><strong>Gestor de Pagos de Multas Vehiculares CDMX (GPMV)</strong></p>
+            <p>Secretaría de Movilidad &bull; Secretaría de Seguridad Ciudadana de la Ciudad de México</p>
+            <p class="footer-sub">&copy; 2026 Proyecto Seminario de Programación en Internet II — FES Cuautitlán UNAM
+            </p>
+        </div>
+    </footer>
+
+    <!-- Animación de carga para peticiones -->
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <p style="color: var(--c-azul-oscuro); font-weight: bold;">Procesando, por favor espera...</p>
+    </div>
+
+    <!-- Leaflet JS para Mapas Interactivos -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Script principal con Efectos de Sonido, Mapas, Videos y Transiciones -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+
+</html>

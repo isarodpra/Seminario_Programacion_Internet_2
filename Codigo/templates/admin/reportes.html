@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Reportes{% endblock %}
+{% block content %}
+<h2 style="color: var(--c-morado);">Reportes</h2>
+
+<h3>Multas por estatus</h3>
+<!-- Elemento Multimedia: Gráfica -->
+<div class="chart-container">
+    📊 Gráfica de Reportes (Multas por Estatus)
+</div>
+
+<table class="tabla">
+    <thead>
+        <tr><th>Estatus</th><th>Cantidad</th></tr>
+    </thead>
+    <tbody>
+        {% for m in reportes.multas_por_estatus %}
+        <tr>
+            <td>{{ m.estatus }}</td>
+            <td>{{ m.cantidad }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3>Pagos por mes</h3>
+<!-- Elemento Multimedia: Gráfica -->
+<div class="chart-container">
+    📈 Gráfica de Reportes (Pagos por Mes)
+</div>
+
+<table class="tabla">
+    <thead>
+        <tr><th>Mes</th><th>Cantidad</th><th>Total</th></tr>
+    </thead>
+    <tbody>
+        {% for p in reportes.pagos_por_mes %}
+        <tr>
+            <td>{{ p.mes }}</td>
+            <td>{{ p.cantidad }}</td>
+            <td>${{ '%.2f'|format(p.total or 0) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div style="margin-top: 2rem;">
+    <a class="btn btn-admin" href="{{ url_for('admin_panel') }}">Regresar al panel</a>
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Registrar Nueva Multa — GPMV CDMX{% endblock %}
+{% block content %}
+<div style="max-width: 750px; margin: 0 auto;">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+            <h2 style="color: var(--c-morado); margin-bottom: 0.25rem;">➕ Registrar Nueva Infracción</h2>
+            <p class="section-subtitle" style="text-align: left; margin: 0;">
+                Módulo para {{ session['admin']['rol'] }} ({{ session['admin']['usuario'] }}).
+            </p>
+        </div>
+        <a class="btn btn-secondary" href="{{ url_for('admin_multas') }}">⬅️ Cancelar</a>
+    </div>
+
+    <div class="card">
+        <form method="POST" action="{{ url_for('admin_nueva_multa') }}">
+            
+            <h3 style="color: var(--c-azul-oscuro); border-bottom: 2px solid var(--c-gris-borde); padding-bottom: 0.4rem; margin-top: 0;">
+                🚗 1. Datos del Vehículo y Sanción
+            </h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label for="placa">Placa Vehicular *</label>
+                    <input type="text" 
+                           id="placa" 
+                           name="placa" 
+                           placeholder="Ej. ABC1234" 
+                           required 
+                           autofocus
+                           style="text-transform: uppercase;">
+                </div>
+                <div>
+                    <label for="folio">Folio Oficial (Opcional, se genera auto si está vacío)</label>
+                    <input type="text" id="folio" name="folio" placeholder="Ej. FOL-2026-0005" style="text-transform: uppercase;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
+                <div>
+                    <label for="fecha">Fecha de Infracción *</label>
+                    <input type="date" id="fecha" name="fecha" required>
+                </div>
+                <div>
+                    <label for="monto">Monto Oficial ($ MXN) *</label>
+                    <input type="number" id="monto" name="monto" step="0.50" min="100" placeholder="1200.00" required>
+                </div>
+                <div>
+                    <label for="estatus">Estatus Inicial</label>
+                    <select id="estatus" name="estatus">
+                        <option value="Pendiente" selected>⏳ Pendiente</option>
+                        <option value="Pagada">✅ Pagada</option>
+                        <option value="Liberada">🚗 Liberada</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-top: 0.5rem;">
+                <label for="motivo">Motivo o Causa Legal de la Sanción *</label>
+                <select id="motivoSelect" onchange="if(this.value) document.getElementById('motivo').value = this.value;" style="margin-bottom: 0.5rem;">
+                    <option value="">-- Selecciona motivo común o escribe abajo --</option>
+                    <option value="Exceso de velocidad en vías primarias">Exceso de velocidad en vías primarias (Art. 9)</option>
+                    <option value="Estacionamiento en lugar prohibido o rampa">Estacionamiento en lugar prohibido o rampa (Art. 30)</option>
+                    <option value="Pasarse semáforo con luz roja">Pasarse semáforo con luz roja (Art. 10)</option>
+                    <option value="Falta de placas o tarjeta de circulación">Falta de placas o tarjeta de circulación (Art. 45)</option>
+                    <option value="Conducir utilizando dispositivo móvil">Conducir utilizando dispositivo móvil (Art. 38)</option>
+                    <option value="Invasión de carril confinado de Metrobús">Invasión de carril confinado de Metrobús (Art. 11)</option>
+                </select>
+                <input type="text" id="motivo" name="motivo" placeholder="Descripción legal de la infracción" required>
+            </div>
+
+            <h3 style="color: var(--c-guinda); border-bottom: 2px solid var(--c-gris-borde); padding-bottom: 0.4rem; margin-top: 1.5rem;">
+                🏛️ 2. Proceso de Traslado y Retención Vehicular (Corralón)
+            </h3>
+
+            <div style="background: #fdf2f4; border: 1px solid #fecdd3; border-radius: var(--radius-sm); padding: 1rem; margin: 1rem 0;">
+                <label style="display: flex; align-items: center; gap: 0.65rem; margin: 0; cursor: pointer; font-size: 1.05rem; color: var(--c-guinda);">
+                    <input type="checkbox" 
+                           id="remitir_corralon" 
+                           name="remitir_corralon" 
+                           value="1" 
+                           onchange="document.getElementById('seccionCorralon').style.display = this.checked ? 'block' : 'none';"
+                           style="width: 20px; height: 20px; margin: 0;">
+                    <strong>¿Remitir vehículo a depósito vehicular (Corralón)?</strong>
+                </label>
+                <small style="display: block; margin-top: 0.35rem; color: #881337;">
+                    Simula la retención física del vehículo automotor y su remisión mediante grúa a las instalaciones oficiales de la SSC.
+                </small>
+            </div>
+
+            <!-- Campos Condicionales de Corralón -->
+            <div id="seccionCorralon" style="display: none; padding: 1rem; background: #f8fafc; border: 1px solid var(--c-gris-borde); border-radius: var(--radius-sm); margin-bottom: 1.25rem;">
+                <label for="nombre_corralon">Depósito Vehicular Oficial de Destino</label>
+                <select id="nombre_corralon" name="nombre_corralon" onchange="actualizarDirCorralon(this.value)">
+                    <option value="">-- Selecciona el corralón asignado --</option>
+                    {% for nombre, geo in corralones.items() %}
+                    <option value="{{ nombre }}" data-dir="{{ geo.direccion }}">{{ nombre }} (Zona {{ geo.zona }})</option>
+                    {% endfor %}
+                </select>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-top: 0.75rem;">
+                    <div>
+                        <label for="direccion_corralon">Dirección del Depósito</label>
+                        <input type="text" id="direccion_corralon" name="direccion_corralon" placeholder="Dirección oficial">
+                    </div>
+                    <div>
+                        <label for="area_corralon">Área / Cajón de Resguardo</label>
+                        <input type="text" id="area_corralon" name="area_corralon" placeholder="Ej. A-12, B-03" style="text-transform: uppercase;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="acciones" style="margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
+                    💾 Guardar y Registrar Sanción
+                </button>
+                <a class="btn btn-secondary" href="{{ url_for('admin_multas') }}">Regresar</a>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Establecer fecha de hoy por defecto
+    const hoy = new Date().toISOString().split('T')[0];
+    document.getElementById('fecha').value = hoy;
+});
+
+function actualizarDirCorralon(nombre) {
+    const sel = document.getElementById('nombre_corralon');
+    const opt = sel.options[sel.selectedIndex];
+    const dir = opt.getAttribute('data-dir') || '';
+    document.getElementById('direccion_corralon').value = dir;
+    if (!document.getElementById('area_corralon').value) {
+        document.getElementById('area_corralon').value = 'A-01';
+    }
+}
+</script>
+{% endblock %}
